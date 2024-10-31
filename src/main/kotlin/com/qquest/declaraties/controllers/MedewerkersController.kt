@@ -1,5 +1,6 @@
 package com.qquest.declaraties.controllers
 
+import com.qquest.declaraties.domain.CustomOAuthMedewerker
 import com.qquest.declaraties.domain.dto.MedewerkerDto
 import com.qquest.declaraties.domain.dto.MedewerkerUpdateReqDto
 import com.qquest.declaraties.services.MedewerkerService
@@ -8,6 +9,7 @@ import com.qquest.declaraties.toMedewerkerEntity
 import com.qquest.declaraties.toMedewerkerUpdateReq
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -31,6 +33,28 @@ class MedewerkersController(private val medewerkerService: MedewerkerService) {
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
 
+    }
+
+    @GetMapping(path = ["/register"])
+    fun readUnregisteredMedewerker(@AuthenticationPrincipal customOAuthMedewerker: CustomOAuthMedewerker): ResponseEntity<MedewerkerDto>{
+        val id = customOAuthMedewerker.medewerker.id
+        checkNotNull(id)
+        val foundMedewerker = medewerkerService.get(id)?.toMedewerkerDto()
+        return foundMedewerker?.let {
+            ResponseEntity(it, HttpStatus.OK)
+        } ?: ResponseEntity(HttpStatus.NOT_FOUND)
+    }
+
+    @PutMapping(path = ["/register"])
+    fun fullUpdateRegisteredMedewerker(@AuthenticationPrincipal customOAuthMedewerker: CustomOAuthMedewerker, @RequestBody medewerkerDto: MedewerkerDto): ResponseEntity<MedewerkerDto>{
+        val id = customOAuthMedewerker.medewerker.id
+        checkNotNull(id)
+        return try {
+            val updatedMedewerker = medewerkerService.fullUpdate(id, medewerkerDto.toMedewerkerEntity()).toMedewerkerDto()
+            ResponseEntity(updatedMedewerker, HttpStatus.OK)
+        } catch (ex:IllegalStateException){
+            ResponseEntity(HttpStatus.BAD_REQUEST)
+        }
     }
 
     @GetMapping

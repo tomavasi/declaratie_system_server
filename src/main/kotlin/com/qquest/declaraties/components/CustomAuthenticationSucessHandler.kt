@@ -17,7 +17,7 @@ class CustomOAuth2SuccessHandler: AuthenticationSuccessHandler {
         val oAuthMedewerker = authentication.principal as CustomOAuthMedewerker
 
         if (oAuthMedewerker.medewerker.bankrekening == null) {
-            response.sendRedirect("/register")
+            response.sendRedirect("v1/medewerkers/register")
         } else {
             response.sendRedirect("/")
         }
